@@ -5,12 +5,13 @@ import {
 } from "@nestjs/common";
 import { ReturnModelType } from "@typegoose/typegoose";
 import { InjectModel } from "nestjs-typegoose";
+import { Role } from "src/constants/enum";
 import { UsersModel } from "src/modules/user/user.model";
 import { decodeToken } from "src/utils/jwt.utils";
 import { createObjectId } from "src/utils/objectId.utils";
 
 @Injectable()
-export class AuthGuard {
+export class UserAuthGuard {
   constructor(
     @InjectModel(UsersModel)
     private customersModel: ReturnModelType<typeof UsersModel>,
@@ -25,25 +26,29 @@ export class AuthGuard {
     if (!authToken) {
       throw new UnauthorizedException();
     }
-    const { id } = decodeToken(authToken);
+
+    const { id, role } = decodeToken(authToken);
 
     try {
-      let user;
+      if (role === Role.User) {
+        const user = await this.customersModel
+          .find({ _id: createObjectId(id), isDeleted: { $ne: true } })
+          .select("-password -role")
+          .limit(1)
+          .lean();
 
-      [user] = await this.customersModel
-        .find({ _id: createObjectId(id), isDeleted: { $ne: true } })
-        .select("-password -role")
-        .limit(1)
-        .lean();
-      if (!user) {
-        throw new UnauthorizedException();
+        if (!user) {
+          throw new UnauthorizedException();
+        }
+
+        req.user = {
+          ...user,
+        };
+
+        return true;
       }
 
-      req.user = {
-        ...user,
-      };
-
-      return true;
+      throw new UnauthorizedException();
     } catch (e) {
       throw new UnauthorizedException();
     }

@@ -27,7 +27,7 @@ export const decodeToken = (authorization: string) => {
     [, authToken] = authorization.split(" ");
   }
 
-  const { id } = verifyToken(authToken);
+  const { id, role } = verifyToken(authToken);
 
-  return { id };
+  return { id, role };
 };

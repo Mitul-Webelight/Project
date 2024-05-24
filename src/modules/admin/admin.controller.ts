@@ -9,33 +9,31 @@ import {
   Res,
   UseGuards,
 } from "@nestjs/common";
-import { UsersService } from "./user.service";
 import { Response } from "express";
-import { CreateUserDto, LoginUserDto } from "./user.dto";
 import responseUtils from "src/utils/response.utils";
 import { setAuthToken } from "src/utils/cookie.utils";
 import { CookieName } from "src/constants/enum";
-import { UserAuthGuard } from "src/guards/user.guard";
 import { CurrentUser } from "src/decorators/currentUser";
-import { UsersModel } from "./user.model";
 import { ApiSwaggerResponse, ApiTagsAndBearer } from "src/decorators/swagger";
 import { MessageResponse } from "src/decorators/swagger.dto";
 import { AdminAuthGuard } from "src/guards/admin.guard";
+import { AdminModel } from "./admin.model";
+import { AdminService } from "./admin.service";
+import { CreateAdminDto, LoginAdminDto } from "./admin.dto";
 
-@ApiTagsAndBearer("Users")
-@Controller("user")
-export class UsersController {
-  constructor(private userService: UsersService) {}
+@ApiTagsAndBearer("Admin")
+@Controller("admin")
+export class AdminController {
+  constructor(private adminService: AdminService) {}
 
-  @ApiSwaggerResponse(CreateUserDto, {
+  @ApiSwaggerResponse(CreateAdminDto, {
     status: HttpStatus.CREATED,
   })
-  @UseGuards(AdminAuthGuard)
   @Post()
-  async createUser(@Res() res: Response, @Body() payload: CreateUserDto) {
+  async createAdmin(@Res() res: Response, @Body() payload: CreateAdminDto) {
     try {
       const { password: _password, ...data } =
-        await this.userService.createUser(payload);
+        await this.adminService.createAdmin(payload);
 
       return responseUtils.success(res, { data, status: HttpStatus.CREATED });
     } catch (error) {
@@ -43,16 +41,16 @@ export class UsersController {
     }
   }
 
-  @ApiSwaggerResponse(LoginUserDto, {
+  @ApiSwaggerResponse(LoginAdminDto, {
     status: HttpStatus.OK,
   })
   @Post("login")
-  async userLogin(@Res() res: Response, @Body() loginDto: LoginUserDto) {
+  async adminLogin(@Res() res: Response, @Body() loginDto: LoginAdminDto) {
     try {
-      const { token, ...data } = await this.userService.loginUser(loginDto);
+      const { token, ...data } = await this.adminService.loginAdmin(loginDto);
 
       setAuthToken({
-        name: CookieName.userToken,
+        name: CookieName.adminToken,
         res,
         data: token,
       });
@@ -63,12 +61,12 @@ export class UsersController {
     }
   }
 
-  @ApiSwaggerResponse(CreateUserDto, {
+  @ApiSwaggerResponse(CreateAdminDto, {
     status: HttpStatus.OK,
   })
-  @UseGuards(UserAuthGuard)
+  @UseGuards(AdminAuthGuard)
   @Get()
-  async getUser(@Res() res: Response, @CurrentUser() user: UsersModel) {
+  async getAdmin(@Res() res: Response, @CurrentUser() user: AdminModel) {
     try {
       const data = user;
 
@@ -78,14 +76,14 @@ export class UsersController {
     }
   }
 
-  @ApiSwaggerResponse(CreateUserDto, {
+  @ApiSwaggerResponse(CreateAdminDto, {
     status: HttpStatus.OK,
   })
   @UseGuards(AdminAuthGuard)
   @Get()
   async getAllUser(@Res() res: Response) {
     try {
-      const data = await this.userService.allUsers();
+      const data = await this.adminService.allAdmin();
 
       return responseUtils.success(res, { data, status: HttpStatus.OK });
     } catch (error) {
@@ -93,18 +91,18 @@ export class UsersController {
     }
   }
 
-  @ApiSwaggerResponse(CreateUserDto, {
+  @ApiSwaggerResponse(CreateAdminDto, {
     status: HttpStatus.OK,
   })
-  @UseGuards(UserAuthGuard)
+  @UseGuards(AdminAuthGuard)
   @Put()
-  async updateUser(
+  async updateAdmin(
     @Res() res: Response,
     @CurrentUser() { _id }: RequestUser,
-    @Body() reqBody: CreateUserDto,
+    @Body() reqBody: CreateAdminDto,
   ) {
     try {
-      const data = await this.userService.updateUser(_id, reqBody);
+      const data = await this.adminService.updateAdmin(_id, reqBody);
 
       return responseUtils.success(res, { data, status: HttpStatus.OK });
     } catch (error) {
@@ -115,11 +113,11 @@ export class UsersController {
   @ApiSwaggerResponse(MessageResponse, {
     status: HttpStatus.OK,
   })
-  @UseGuards(UserAuthGuard)
+  @UseGuards(AdminAuthGuard)
   @Delete()
-  async deleteUser(@Res() res: Response, @CurrentUser() { _id }: RequestUser) {
+  async deleteAdmin(@Res() res: Response, @CurrentUser() { _id }: RequestUser) {
     try {
-      const data = await this.userService.deleteUser(_id);
+      const data = await this.adminService.deleteAdmin(_id);
 
       return responseUtils.success(res, { data, status: HttpStatus.OK });
     } catch (error) {

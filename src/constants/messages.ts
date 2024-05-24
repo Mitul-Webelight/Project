@@ -9,4 +9,6 @@ export const errorMessage = {
   incorrectCredential: "Incorrect Credential",
   strongPasswordValidation:
     "Password must contain Minimum eight characters, at least one uppercase letter, one lowercase letter, one number and one special character",
+  contactNoAlreadyExist: "User already exist with same contactNO",
+  emailAlreadyExist: "User already exist with same email",
 };
