@@ -1,7 +1,8 @@
 type RequestUser = Url & {
-  _id: string;
+  id: string;
   firstName: string;
   lastName: string;
   contactNo: string;
   email: string;
+  role: number;
 };

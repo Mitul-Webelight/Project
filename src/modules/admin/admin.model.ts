@@ -2,7 +2,7 @@ import { index, modelOptions, pre, prop } from "@typegoose/typegoose";
 import { hash } from "bcryptjs";
 import { Role } from "src/constants/enum";
 
-@pre<UsersModel>("save", async function (next) {
+@pre<AdminModel>("save", async function (next) {
   try {
     this.password = await hash(this.password, 4);
     next();
@@ -11,10 +11,10 @@ import { Role } from "src/constants/enum";
   }
 })
 @modelOptions({
-  schemaOptions: { timestamps: true, versionKey: false, collection: "users" },
+  schemaOptions: { timestamps: true, versionKey: false, collection: "admin" },
 })
 @index({ contactNo: 1, email: 1 }, { unique: true })
-export class UsersModel {
+export class AdminModel {
   @prop()
   firstName: string;
 
@@ -30,7 +30,7 @@ export class UsersModel {
   @prop()
   password: string;
 
-  @prop({ type: Number, enum: Role, default: Role.User })
+  @prop({ type: Number, enum: Role, default: Role.Admin })
   role!: Role;
 
   @prop({ default: false })

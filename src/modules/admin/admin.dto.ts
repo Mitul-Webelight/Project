@@ -9,7 +9,7 @@ import {
 } from "class-validator";
 import { errorMessage } from "src/constants/messages";
 
-export class CreateUserDto {
+export class CreateAdminDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
@@ -46,7 +46,7 @@ export class CreateUserDto {
   isDeleted?: boolean;
 }
 
-export class LoginUserDto {
+export class LoginAdminDto {
   @ApiProperty()
   @Transform(({ value }) => value.trim().toLocaleLowerCase())
   @IsNotEmpty()

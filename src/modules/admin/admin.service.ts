@@ -4,26 +4,27 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { InjectModel } from "nestjs-typegoose";
-import { UsersModel } from "./user.model";
 import { ReturnModelType } from "@typegoose/typegoose";
-import { CreateUserDto, LoginUserDto } from "./user.dto";
 import { compare } from "bcryptjs";
 import { jwtSign } from "src/utils/jwt.utils";
 import { errorMessage, successMessage } from "src/constants/messages";
+import { AdminModel } from "./admin.model";
+import { CreateUserDto } from "../user/user.dto";
+import { CreateAdminDto, LoginAdminDto } from "./admin.dto";
 
 @Injectable()
-export class UsersService {
+export class AdminService {
   constructor(
-    @InjectModel(UsersModel)
-    private usersModel: ReturnModelType<typeof UsersModel>,
+    @InjectModel(AdminModel)
+    private adminModel: ReturnModelType<typeof AdminModel>,
   ) {}
 
-  async createUser(payload: CreateUserDto) {
+  async createAdmin(payload: CreateAdminDto) {
     const { email, contactNo } = payload;
 
     const [emailExist, contactNoExist] = await Promise.all([
-      this.usersModel.exists({ email, isDeleted: { $ne: true } }),
-      this.usersModel.exists({ contactNo, isDeleted: { $ne: true } }),
+      this.adminModel.exists({ email, isDeleted: { $ne: true } }),
+      this.adminModel.exists({ contactNo, isDeleted: { $ne: true } }),
     ]);
 
     if (emailExist) {
@@ -34,24 +35,24 @@ export class UsersService {
       throw new BadRequestException(errorMessage.contactNoAlreadyExist);
     }
 
-    const data = await this.usersModel.create(payload);
+    const data = await this.adminModel.create(payload);
 
     return data.toJSON();
   }
 
-  async loginUser({ email, password }: LoginUserDto) {
-    const user = await this.usersModel
+  async loginAdmin({ email, password }: LoginAdminDto) {
+    const admin = await this.adminModel
       .findOne({
         email,
         isDeleted: { $ne: true },
       })
       .lean();
 
-    if (!user) {
+    if (!admin) {
       throw new BadRequestException(errorMessage.incorrectCredential);
     }
 
-    const { password: _password, _id: userId, role, ...rest } = user;
+    const { password: _password, _id: adminId, role, ...rest } = admin;
 
     const matchPassword = await compare(password, _password);
 
@@ -60,7 +61,7 @@ export class UsersService {
     }
 
     const token = jwtSign({
-      id: `${userId}`,
+      id: `${adminId}`,
       role,
     });
 
@@ -70,32 +71,32 @@ export class UsersService {
     };
   }
 
-  async allUsers() {
-    return this.usersModel.find({ isDeleted: { $ne: true } });
+  async allAdmin() {
+    return this.adminModel.find({ isDeleted: { $ne: true } });
   }
 
-  async updateUser(id: string, reqBody: CreateUserDto) {
-    const user = await this.usersModel.findByIdAndUpdate(id, reqBody, {
+  async updateAdmin(id: string, reqBody: CreateUserDto) {
+    const admin = await this.adminModel.findByIdAndUpdate(id, reqBody, {
       lean: true,
       new: true,
       projection: { password: 0 },
     });
 
-    if (!user) {
+    if (!admin) {
       throw new NotFoundException(errorMessage.userNotExist);
     }
 
-    return user;
+    return admin;
   }
 
-  async deleteUser(id: string) {
-    const user = await this.usersModel.findByIdAndUpdate(
+  async deleteAdmin(id: string) {
+    const admin = await this.adminModel.findByIdAndUpdate(
       id,
       { isDeleted: false },
       { lean: true, new: true },
     );
 
-    if (!user) {
+    if (!admin) {
       throw new NotFoundException(errorMessage.userNotExist);
     }
 
